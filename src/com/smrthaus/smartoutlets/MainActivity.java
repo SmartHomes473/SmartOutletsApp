@@ -1,22 +1,29 @@
 package com.smrthaus.smartoutlets;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.UUID;
+
 import android.app.Activity;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.ActionBar;
+import android.app.AlertDialog;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
+import android.content.Intent;
+import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.content.Context;
-import android.os.Build;
-import android.os.Bundle;
-import android.view.Gravity;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.support.v4.widget.DrawerLayout;
-import android.widget.ArrayAdapter;
-import android.widget.TextView;
 
 
 public class MainActivity extends ActionBarActivity
@@ -31,6 +38,18 @@ public class MainActivity extends ActionBarActivity
      * Used to store the last screen title. For use in {@link #restoreActionBar()}.
      */
     private CharSequence mTitle;
+    
+    /**
+     * Bluetooth state.
+     */
+	private static final int REQUEST_ENABLE_BT = 1;
+	private static final UUID SPP_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+	private static final String address = "E0:06:E6:BE:AB:9B";
+	private BluetoothAdapter mBTAdapter = null;
+	private BluetoothSocket mBTSocket = null;
+	private OutputStream mBTOutput = null;
+	private InputStream mBTInput = null;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +64,84 @@ public class MainActivity extends ActionBarActivity
         mNavigationDrawerFragment.setUp(
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
+        
+        // Set up Bluetooth
+        mBTAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (mBTAdapter == null) {
+        	abortWithAlert("Fatal Error", "Bluetooth is not supported on your device.  Aborting.");
+        }
+        if (mBTAdapter.isEnabled() == false) {
+        	// Ask to turn on Bluetooth
+        	Intent enableBTIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+        	startActivityForResult(enableBTIntent, REQUEST_ENABLE_BT);	
+        }
+    }
+    
+    @Override
+    protected void onResume() {
+    	super.onResume();
+    	
+    	// Create Bluetooth socket
+    	BluetoothDevice device = mBTAdapter.getRemoteDevice(address);
+    	try {
+    		mBTSocket = device.createRfcommSocketToServiceRecord(SPP_UUID);
+    	}
+    	catch (IOException e) {
+    		abortWithAlert("Fatal Error", "socket creation failed" + e.getMessage() + ".");
+    	}
+    	
+    	// Discovery is resource intensive.  Disable it.
+    	mBTAdapter.cancelDiscovery();
+    	
+    	// Establish connection.
+    	// XXX: This action blocks until it connects.  We want to have a
+    	//      loading screen and have this happen in the background.
+    	try {
+    		mBTSocket.connect();
+    	}
+    	catch (IOException e) {
+    		try {
+    			mBTSocket.close();
+    			abortWithAlert("Fatal Error", "Openning socket failed: " + e.getMessage() + ".");
+    		}
+    		catch (IOException e2) {
+    			abortWithAlert("Fatal Error", "Closing socket failed after connection failure: "
+    					+ e2.getMessage() + ".");
+    		}
+    	}
+    	
+    	// Get input and output streams
+    	try {
+    		mBTOutput = mBTSocket.getOutputStream();
+    		mBTInput = mBTSocket.getInputStream();
+    	}
+    	catch (IOException e) {
+    		abortWithAlert("Fatal Error",
+    				"Stream creation failed: " + e.getMessage() + ".");
+    	}
+    }
+    
+    @Override
+    protected void onPause() {
+    	super.onPause();
+    	
+    	// Flush the output buffer
+    	if (mBTOutput != null) {
+    		try {
+				mBTOutput.flush();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    	}
+    	
+    	// Close the socket
+    	try {
+			mBTSocket.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 
     @Override
@@ -152,4 +249,16 @@ public class MainActivity extends ActionBarActivity
         }
     }
 
+    /**
+     * Displays an AlertDialog containing an error message.  Forces app to finish.
+     */
+    public void abortWithAlert ( String title, String message ) {
+    	new AlertDialog.Builder(this).setTitle(title)
+    	.setMessage(message)
+    	.setPositiveButton("Exit", new OnClickListener() {
+    		public void onClick(DialogInterface arg0, int arg1) {
+    			finish();
+    		}
+    	}).show();
+    }
 }

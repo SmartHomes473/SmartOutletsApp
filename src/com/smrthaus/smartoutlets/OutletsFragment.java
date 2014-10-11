@@ -27,10 +27,13 @@ public class OutletsFragment extends ListFragment {
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
+		View view;
+		
+		// log
+		Log.i("FRAGMENT_CREATE_VIEW", "onCreateView() called");
+		
 		// inflate the view using this fragment's layout
-		View view = inflater.inflate(R.layout.fragment_outlets, container, false);
-		
-		
+		view = inflater.inflate(R.layout.fragment_outlets, container, false);
 
 		// set up list of outlets
 		m_outlets = new ArrayList<Outlet>();
@@ -58,11 +61,18 @@ public class OutletsFragment extends ListFragment {
 		return view;
 	}
 
+	/**
+	 * 
+	 */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		Log.i("FRAGMENT_CREATE", "onCreate() called");
 	}
 
+	/**
+	 * Build an array of mock Outlets to populate the ListView.  Delays for ~2 seconds to simulate loading.
+	 */
 	private void getOutlets() {
 		try {
 			
