@@ -8,6 +8,8 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.smrthaus.smartoutlets.BluetoothManager.BTException;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
@@ -48,16 +50,7 @@ public class MainActivity extends ActionBarActivity implements
 	/**
 	 * Bluetooth state.
 	 */
-	private static final int REQUEST_ENABLE_BT = 1;
-	private static final UUID SPP_UUID = UUID
-			.fromString("00001101-0000-1000-8000-00805F9B34FB");
-	private static final String address = "E0:06:E6:BE:AB:9B";
-	final Lock mBTLock = new ReentrantLock();
-	final Condition mBTWait = mBTLock.newCondition();
-	private BluetoothAdapter mBTAdapter = null;
-	private BluetoothSocket mBTSocket = null;
-	private OutputStream mBTOutput = null;
-	private InputStream mBTInput = null;
+	
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -72,129 +65,24 @@ public class MainActivity extends ActionBarActivity implements
 		mNavigationDrawerFragment.setUp(R.id.navigation_drawer,
 				(DrawerLayout) findViewById(R.id.drawer_layout));
 
-		// Set up Bluetooth
-		mBTAdapter = BluetoothAdapter.getDefaultAdapter();
-		if (mBTAdapter == null) {
-			abortWithAlert("Fatal Error",
-					"Bluetooth is not supported on your device.  Aborting.");
-		}
-		if (mBTAdapter.isEnabled() == false) {
-			// Ask to turn on Bluetooth
-			Intent enableBTIntent = new Intent(
-					BluetoothAdapter.ACTION_REQUEST_ENABLE);
-			startActivityForResult(enableBTIntent, REQUEST_ENABLE_BT);
-		}
+		BluetoothManager.enableBluetooth(this);
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
 
-		// Spawn a thread to handle Bluetooth connection
-		new Thread(new Runnable() {
-			public void run() {
-				mBTLock.lock();
-
-				// Create Bluetooth socket
-				BluetoothDevice device = mBTAdapter.getRemoteDevice(address);
-				try {
-					mBTSocket = device
-							.createRfcommSocketToServiceRecord(SPP_UUID);
-				} catch (IOException e) {
-					abortWithAlert("Fatal Error",
-							"socket creation failed" + e.getMessage() + ".");
-				}
-
-				// Discovery is resource intensive. Disable it.
-				mBTAdapter.cancelDiscovery();
-
-				// Establish connection.
-				// XXX: This action blocks until it connects. We want to have a
-				// loading screen and have this happen in the background.
-				try {
-					mBTSocket.connect();
-				} catch (IOException e) {
-					try {
-						mBTSocket.close();
-						abortWithAlert("Fatal Error",
-								"Openning socket failed: " + e.getMessage()
-										+ ".");
-					} catch (IOException e2) {
-						abortWithAlert("Fatal Error",
-								"Closing socket failed after connection failure: "
-										+ e2.getMessage() + ".");
-					}
-				}
-
-				// Get input and output streams
-				try {
-					mBTOutput = mBTSocket.getOutputStream();
-					mBTInput = mBTSocket.getInputStream();
-				} catch (IOException e) {
-					abortWithAlert("Fatal Error", "Stream creation failed: "
-							+ e.getMessage() + ".");
-				}
-
-				mBTWait.signal();
-				mBTLock.unlock();
-			}
-		}).start();
-
-		new Thread(new Runnable() {
-			public void run() {
-				mBTLock.lock();
-
-				// Wait for the Bluetooth socket to be created and connected
-				while (mBTSocket == null || !mBTSocket.isConnected()) {
-					try {
-						mBTWait.await();
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
-
-				try {
-					// Request all outlets
-					byte[] req_outlets = new byte[] { 0x03, 0x00, 0x00, 0x00 };
-					mBTOutput.write(req_outlets);
-
-					// Read response
-					byte[] response = new byte[1024];
-					int bytes_read = mBTInput.read(response);
-					Log.i("SMART_OUTLETS_BT", bytesToHex(response, bytes_read));
-
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-
-				mBTLock.unlock();
-			}
-		});
+		// connect to the server
+		BluetoothManager.connect();
 	}
 
 	@Override
 	protected void onPause() {
 		super.onPause();
 
-		// Flush the output buffer
-		if (mBTOutput != null) {
-			try {
-				mBTOutput.flush();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-
-		// Close the socket
-		try {
-			mBTSocket.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		// Cancel all ongoing Bluetooth operations
+		BluetoothManager.cancelAll();
+		BluetoothManager.disconnect();
 	}
 
 	@Override
