@@ -47,9 +47,8 @@ public class MainActivity extends ActionBarActivity implements
 	 */
 	private CharSequence mTitle;
 
-	/**
-	 * Bluetooth state.
-	 */
+	// References to UI fragments
+	private Fragment mOutletsFragment = null;
 	
 
 	@Override
@@ -91,12 +90,17 @@ public class MainActivity extends ActionBarActivity implements
 		Fragment newFragment;
 		switch (position) {
 		case 0:
-			newFragment = new OutletsFragment();
+			// Creates a new OutletsFragment if one hasn't been instantiated yet
+			if (mOutletsFragment == null) {
+				mOutletsFragment = new OutletsFragment();
+			}
+			newFragment = mOutletsFragment;
 			break;
 		default:
 			newFragment = PlaceholderFragment.newInstance(position);
-
 		}
+		
+		// Replace the current view with the new fragment
 		FragmentManager fragmentManager = getSupportFragmentManager();
 		fragmentManager.beginTransaction().replace(R.id.container, newFragment)
 				.commit();
@@ -114,6 +118,7 @@ public class MainActivity extends ActionBarActivity implements
 			mTitle = getString(R.string.title_section3);
 			break;
 		}
+		getSupportActionBar().setTitle(mTitle);
 	}
 
 	public void restoreActionBar() {

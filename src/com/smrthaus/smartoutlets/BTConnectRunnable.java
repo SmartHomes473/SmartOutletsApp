@@ -10,8 +10,6 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 
-import com.smrthaus.smartoutlets.BluetoothManager.BTException;
-
 public class BTConnectRunnable implements Runnable
 {
 	// Sets a log tag for this class

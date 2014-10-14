@@ -2,7 +2,8 @@ package com.smrthaus.smartoutlets;
 
 import java.util.ArrayList;
 
-import android.app.ProgressDialog;
+import com.smrthaus.smartoutlets.Outlet.State;
+
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
@@ -11,120 +12,103 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.CompoundButton;
 import android.widget.ProgressBar;
 import android.widget.Switch;
 import android.widget.TextView;
 
-import com.smrthaus.smartoutlets.Outlet.State;
+public class OutletsFragment extends ListFragment
+{
+	private ArrayList<Outlet>	mOutletsList		= null;
+	private Boolean				mListInitialized	= true;
+	private OutletAdapter		mAdapter;
+	private Runnable			viewOutlets;
+	private ProgressBar			mActivityIndicator;
 
-public class OutletsFragment extends ListFragment {
-	private ProgressDialog m_ProgressDialog = null;
-	private ArrayList<Outlet> m_outlets = null;
-	private OutletAdapter m_adapter;
-	private Runnable viewOutlets;
-	private ProgressBar mProgress;
+	// Keys used for saving and restoring state
+	final static private String	STATE_OUTLETS_LIST	= "state_outlets_list";
 
 	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container,
-			Bundle savedInstanceState) {
+	public View onCreateView ( LayoutInflater inflater, ViewGroup container,
+			Bundle savedInstanceState )
+	{
+		super.onCreateView(inflater, container, savedInstanceState);
+
 		View view;
-		
+
 		// log
 		Log.i("FRAGMENT_CREATE_VIEW", "onCreateView() called");
-		
+
+		// Check if we need to re-initialize the list
+		mListInitialized = true;
+		if (mOutletsList == null) {
+			mListInitialized = false;
+			mOutletsList = new ArrayList<Outlet>();
+		}
+
 		// inflate the view using this fragment's layout
 		view = inflater.inflate(R.layout.fragment_outlets, container, false);
 
-		// set up list of outlets
-		m_outlets = new ArrayList<Outlet>();
-
-		// set up list adapter
-		this.m_adapter = new OutletAdapter(getActivity(),
-				R.layout.outlets_list_item, m_outlets);
-		setListAdapter(this.m_adapter);
-
-		// start progress bar
-		mProgress = (ProgressBar) view.findViewById(R.id.outlets_list_progress);
-		mProgress.setVisibility(View.VISIBLE);
-		
-		// thread to get outlets
-		viewOutlets = new Runnable() {
-			@Override
-			public void run() {
-				getOutlets();
-			}
-		};
-		Thread thread = new Thread(null, viewOutlets,
-				"SmartOutletsFetchOutlets");
-		thread.start();
+		// Create and register the adapter for the ListView
+		mAdapter = new OutletAdapter(getActivity(), R.layout.outlets_list_item,
+				mOutletsList);
+		setListAdapter(mAdapter);
 
 		return view;
+	}
+
+	@Override
+	public void onViewCreated ( View view, Bundle savedInstanceState )
+	{
+		super.onViewCreated(view, savedInstanceState);
+
+		// log
+		Log.i("FRAGMENT_CREATE_VIEW", "onCreateView() called");
+
+		// Load the list of outlets if it hasn't previously been initialized
+		if (mListInitialized == false) {
+			// Starts the activity indicator to indicate we are loading the
+			// outlets
+			// in the background
+			mActivityIndicator = (ProgressBar) view
+					.findViewById(R.id.outlets_list_progress);
+			mActivityIndicator.setVisibility(View.VISIBLE);
+
+			// Load outlets
+			BluetoothManager.loadOutlets(getListView());
+		}
 	}
 
 	/**
 	 * 
 	 */
 	@Override
-	public void onCreate(Bundle savedInstanceState) {
+	public void onCreate ( Bundle savedInstanceState )
+	{
 		super.onCreate(savedInstanceState);
+
 		Log.i("FRAGMENT_CREATE", "onCreate() called");
 	}
-
-	/**
-	 * Build an array of mock Outlets to populate the ListView.  Delays for ~2 seconds to simulate loading.
-	 */
-	private void getOutlets() {
-		try {
-			
-			// construct outlet list
-			m_outlets = new ArrayList<Outlet>();
-			m_outlets.add(new Outlet("outlet1", "Outlet 1", State.OFF));
-			m_outlets.add(new Outlet("outlet2", "Outlet 2", State.ON));
-			m_outlets.add(new Outlet("outlet3", "Outlet 3", State.OFF));
-
-			// sleep the thread to simulate loading time
-			Thread.sleep(2000);
-
-			// log array initialization
-			Log.i("ARRAY", "" + m_outlets.size());
-		} catch (Exception e) {
-			Log.e("BACKGROUND_PROC", e.getMessage());
-		}
-
-		getActivity().runOnUiThread(returnRes);
-	}
-
-	private Runnable returnRes = new Runnable() {
-
-		@Override
-		public void run() {
-			if (m_outlets != null && m_outlets.size() > 0) {
-				m_adapter.notifyDataSetChanged();
-				for (int i = 0; i < m_outlets.size(); ++i) {
-					m_adapter.add(m_outlets.get(i));
-				}
-				m_adapter.notifyDataSetChanged();
-			}
-			mProgress.setVisibility(View.INVISIBLE);
-		}
-	};
 
 	/**
 	 * Adapter for populating a ListView with a list of Outlets.
 	 * 
 	 * @author nick
 	 */
-	private class OutletAdapter extends ArrayAdapter<Outlet> {
-		private ArrayList<Outlet> items;
+	public class OutletAdapter extends ArrayAdapter<Outlet>
+	{
+		private ArrayList<Outlet>	items;
 
-		public OutletAdapter(Context context, int textViewResourceId,
-				ArrayList<Outlet> items) {
+		public OutletAdapter ( Context context, int textViewResourceId,
+				ArrayList<Outlet> items )
+		{
 			super(context, textViewResourceId, items);
 			this.items = items;
 		}
 
 		@Override
-		public View getView(int position, View convertView, ViewGroup parent) {
+		public View getView ( int position, View convertView, ViewGroup parent )
+		{
 			View view = convertView;
 
 			// inflate the view if not defined
@@ -147,9 +131,23 @@ public class OutletsFragment extends ListFragment {
 
 				// set the toggle button state
 				if (toggle != null) {
+					toggle.setTag(R.id.togglebutton_outlet, outlet);
+					
+					toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+						public void onCheckedChanged (
+								CompoundButton buttonView, boolean isChecked )
+						{
+							Outlet outlet = (Outlet) buttonView
+									.getTag(R.id.togglebutton_outlet);
+
+							outlet.setState(isChecked ? State.ON : State.OFF);
+						}
+					});
+					
 					toggle.setChecked(outlet.getState() == Outlet.State.ON ? true
 							: false);
 				}
+
 			}
 
 			return view;

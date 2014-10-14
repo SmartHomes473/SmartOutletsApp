@@ -5,21 +5,27 @@
 
     <TextView
         android:id="@+id/outlet_name"
-        android:layout_weight="1"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:includeFontPadding="true" 
-        android:textSize="24sp"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="1"
+        android:includeFontPadding="true"
+        android:paddingBottom="10sp"
         android:paddingLeft="14.0sp"
         android:paddingRight="14.0sp"
         android:paddingTop="10sp"
-        android:paddingBottom="10sp" />
+        android:textSize="24sp" />
 
-    <Switch 
-	    android:id="@+id/togglebutton"
-	    android:layout_width="wrap_content"
-	    android:layout_height="wrap_content"
-	    android:textOn="on"
-	    android:textOff="off" 
-	    android:layout_alignParentRight="true" />
-</LinearLayout> 
+    <Switch
+        android:id="@+id/togglebutton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_gravity="center_vertical"
+        android:paddingLeft="0sp"
+        android:paddingRight="14.0sp"
+        android:tag="@+id/togglebutton_outlet"
+        android:textOff="off"
+        android:textOn="on" />
+
+</LinearLayout>
