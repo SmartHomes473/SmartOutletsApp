@@ -9,6 +9,8 @@ public class Outlet implements Parcelable
 	private String	mOutletId;
 	private String	mOutletName;
 	private State	mOutletState;
+	private int		mCurrentOutletPower;
+	private int		mLastOutletPower;
 
 	public enum State {
 		ON, OFF
@@ -24,12 +26,14 @@ public class Outlet implements Parcelable
 	 * @param state
 	 *            Power state of the outlet. Either State.ON or State.OFF.
 	 */
-	public Outlet(String id, String name, State state)
+	public Outlet ( String id, String name, int power, State state )
 	{
 		// initialize state
-		this.mOutletId = id;
-		this.mOutletName = name;
-		this.mOutletState = state;
+		mOutletId = id;
+		mOutletName = name;
+		mCurrentOutletPower = power;
+		mLastOutletPower = power;
+		mOutletState = state;
 	}
 
 	/**
@@ -41,45 +45,65 @@ public class Outlet implements Parcelable
 	 * @param name
 	 *            Name describing the outlet.
 	 */
-	public Outlet(String id, String name)
+	public Outlet ( String id, String name, int power )
 	{
-		this(id, name, State.OFF);
+		this(id, name, power, State.OFF);
 	}
 
-	public String getId()
+	public String getId ( )
 	{
 		return mOutletId;
 	}
 
-	public String getName()
+	public String getName ( )
 	{
 		return mOutletName;
 	}
 
-	public void setName(String outletName)
+	public void setName ( String outletName )
 	{
 		this.mOutletName = outletName;
 	}
 
-	public State getState()
+	public State getState ( )
 	{
 		return mOutletState;
 	}
 
-	public void setState(State state)
+	public void setState ( State state )
 	{
 		if (mOutletState == state) {
 			return;
 		}
 
 		mOutletState = state;
+		
+		if (state == State.OFF) {
+			mLastOutletPower = mCurrentOutletPower;
+			mCurrentOutletPower = -1;
+		}
+		
 		BluetoothManager.updateOutlet(this);
+	}
+	
+	public int getPower ( )
+	{
+		return mCurrentOutletPower;
+	}
+	
+	public int getLastPower ( )
+	{
+		return mLastOutletPower;
+	}
+	
+	public void setPower ( int power ) {
+		mCurrentOutletPower = power;
 	}
 
 	/**
 	 * Serializes the object as a Parcel
 	 */
-	public void writeToParcel(Parcel out, int flags)
+	public void writeToParcel ( Parcel out, int flags )
 	{
 		out.writeString(mOutletId);
 		out.writeString(mOutletName);
@@ -90,23 +114,24 @@ public class Outlet implements Parcelable
 	public static final Parcelable.Creator<Outlet>	CREATOR;
 	static {
 		CREATOR = new Parcelable.Creator<Outlet>() {
-			public Outlet createFromParcel(Parcel in)
+			public Outlet createFromParcel ( Parcel in )
 			{
 				return new Outlet(in);
 			}
 
-			public Outlet[] newArray(int size)
+			public Outlet[] newArray ( int size )
 			{
 				return new Outlet[size];
 			}
 		};
 	}
-	
+
 	/**
 	 * Special constructor for instantiating an Outlet from a Parcel.
+	 * 
 	 * @param in
 	 */
-	private Outlet(Parcel in)
+	private Outlet ( Parcel in )
 	{
 		mOutletId = in.readString();
 		mOutletName = in.readString();
@@ -117,7 +142,7 @@ public class Outlet implements Parcelable
 	 * Implemented for Parcelable interface
 	 */
 	@Override
-	public int describeContents()
+	public int describeContents ( )
 	{
 		return 0;
 	}

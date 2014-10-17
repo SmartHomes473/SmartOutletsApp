@@ -2,8 +2,6 @@ package com.smrthaus.smartoutlets;
 
 import java.util.ArrayList;
 
-import com.smrthaus.smartoutlets.Outlet.State;
-
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
@@ -14,14 +12,16 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
 import android.widget.ProgressBar;
-import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
-public class OutletsFragment extends ListFragment
+import com.smrthaus.smartoutlets.Outlet.State;
+
+public class PowerFragment extends ListFragment
 {
 	private ArrayList<Outlet>	mOutletsList		= null;
 	private Boolean				mListInitialized	= true;
-	private OutletAdapter		mAdapter;
+	private OutletPowerAdapter		mAdapter;
 	private Runnable			viewOutlets;
 	private ProgressBar			mActivityIndicator;
 
@@ -50,7 +50,7 @@ public class OutletsFragment extends ListFragment
 		view = inflater.inflate(R.layout.fragment_outlets, container, false);
 
 		// Create and register the adapter for the ListView
-		mAdapter = new OutletAdapter(getActivity(), R.layout.outlets_list_item,
+		mAdapter = new OutletPowerAdapter(getActivity(), R.layout.outlets_list_item,
 				mOutletsList);
 		setListAdapter(mAdapter);
 
@@ -95,11 +95,11 @@ public class OutletsFragment extends ListFragment
 	 * 
 	 * @author nick
 	 */
-	public class OutletAdapter extends ArrayAdapter<Outlet>
+	public class OutletPowerAdapter extends ArrayAdapter<Outlet>
 	{
 		private ArrayList<Outlet>	items;
 
-		public OutletAdapter ( Context context, int textViewResourceId,
+		public OutletPowerAdapter ( Context context, int textViewResourceId,
 				ArrayList<Outlet> items )
 		{
 			super(context, textViewResourceId, items);
@@ -122,7 +122,7 @@ public class OutletsFragment extends ListFragment
 			Outlet outlet = items.get(position);
 			if (outlet != null) {
 				TextView label = (TextView) view.findViewById(R.id.outlet_name);
-				Switch toggle = (Switch) view.findViewById(R.id.togglebutton);
+				ToggleButton toggle = (ToggleButton) view.findViewById(R.id.togglebutton);
 
 				// set the Outlet's label
 				if (label != null) {

@@ -2,6 +2,7 @@ package com.smrthaus.smartoutlets;
 
 import java.util.ArrayList;
 import java.util.UUID;
+import java.util.concurrent.locks.Lock;
 
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -43,6 +44,23 @@ public class BTLoadOutletsRunnable implements Runnable
 	@Override
 	public void run ( )
 	{
+		/*
+		 * Stores the current Thread in the BluetoothTask instance so that the
+		 * instance can interrupt the Thread.
+		 */
+		mBluetoothTask.setConnectThread(Thread.currentThread());
+
+		// Moves the current Thread into the background
+		android.os.Process
+				.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
+
+		// Gets the input byte buffer from the BluetoothTask instance.
+		byte[] byteBuffer = mBluetoothTask.getByteBuffer();
+
+		// Acquires a lock on the Bluetooth resources
+		Lock lock = mBluetoothTask.getLock();
+		lock.lock();
+
 		ListView listView = mBluetoothTask.getOutletListView();
 
 		// Does nothing if the view no longer exists
@@ -57,15 +75,20 @@ public class BTLoadOutletsRunnable implements Runnable
 		/*
 		 * TODO: actually read the list of outlets from the server
 		 * 
-		 * Right now these outlets are hard coded for development purposes.
-		 * As soon as we've implemented the communication protocol and parser
-		 * we can read actual data from the remote device.
+		 * Right now these outlets are hard coded for development purposes. As
+		 * soon as we've implemented the communication protocol and parser we
+		 * can read actual data from the remote device.
 		 */
 		ArrayList<Outlet> outletList = new ArrayList<Outlet>();
-		outletList.add(new Outlet("1", "Outlet 1", State.ON));
-		outletList.add(new Outlet("2", "Outlet 2", State.OFF));
-		outletList.add(new Outlet("3", "Outlet 3", State.OFF));
-		
+		outletList.add(new Outlet("1", "Outlet 1", 1200, State.ON));
+		outletList.add(new Outlet("2", "Outlet 2", 300, State.ON));
+		outletList.add(new Outlet("3", "Outlet 3", 6000, State.ON));
+
+		for (int oid = 4; oid < 12; ++oid) {
+			outletList.add(new Outlet(Integer.toString(oid), "Outlet "
+					+ Integer.toString(oid), 0, State.OFF));
+		}
+
 		try {
 			Thread.sleep(2000);
 		}
@@ -73,7 +96,10 @@ public class BTLoadOutletsRunnable implements Runnable
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
+		// Release the lock on Bluetooth resources
+		lock.unlock();
+
 		// Save the outlet list
 		mBluetoothTask.setOutletList(outletList);
 

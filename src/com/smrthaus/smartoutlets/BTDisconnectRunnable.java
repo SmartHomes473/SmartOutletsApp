@@ -32,7 +32,7 @@ public class BTDisconnectRunnable implements Runnable
 	 * @param bluetoothTask
 	 *            The BluetoothTask
 	 */
-	BTDisconnectRunnable(BluetoothTask bluetoothTask)
+	BTDisconnectRunnable ( BluetoothTask bluetoothTask )
 	{
 		mBluetoothTask = bluetoothTask;
 	}
@@ -42,7 +42,7 @@ public class BTDisconnectRunnable implements Runnable
 	 * run on a thread.
 	 */
 	@Override
-	public void run()
+	public void run ( )
 	{
 		/*
 		 * Stores the current Thread in the BluetoothTask instance so that the
@@ -69,15 +69,20 @@ public class BTDisconnectRunnable implements Runnable
 
 			// Gets the currently open socket
 			BluetoothSocket socket = mBluetoothTask.getSocket();
-			
-			// Remove reference to old socket
-			mBluetoothTask.setSocket(null);
 
-			// Flush the output stream
-			socket.getOutputStream().flush();
-			
-			// Close the socket
-			socket.close();
+			if (socket != null) {
+				// Remove reference to old socket
+				mBluetoothTask.setSocket(null);
+
+				// Flush the output stream
+				OutputStream output = socket.getOutputStream();
+				if (output != null) {
+					output.flush();
+				}
+
+				// Close the socket
+				socket.close();
+			}
 
 			mBluetoothTask.handleState(BT_STATE_DISCONNECTED);
 		}

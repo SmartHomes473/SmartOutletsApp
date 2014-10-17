@@ -16,14 +16,12 @@
         android:paddingTop="10sp"
         android:textSize="24sp" />
 
-    <Switch
+    <ToggleButton
         android:id="@+id/togglebutton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
-        android:layout_gravity="center_vertical"
-        android:paddingLeft="0sp"
-        android:paddingRight="14.0sp"
+        android:layout_marginRight="14sp"
         android:tag="@+id/togglebutton_outlet"
         android:textOff="off"
         android:textOn="on" />

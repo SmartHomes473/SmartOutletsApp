@@ -152,6 +152,7 @@ public class BluetoothManager
 	static public void enableBluetooth ( Activity activity )
 	{
 		// TODO: Convert this into a runnable
+		mBTLock.lock();
 		try {
 			// Set up Bluetooth
 			if (mBTAdapter == null) {
@@ -159,17 +160,28 @@ public class BluetoothManager
 						"Bluetooth is not supported on your device");
 			}
 
-			if (mBTAdapter.isEnabled() == false) {
-				// Ask to turn on Bluetooth
-				Intent enableBTIntent = new Intent(
-						BluetoothAdapter.ACTION_REQUEST_ENABLE);
-				activity.startActivityForResult(enableBTIntent,
-						REQUEST_ENABLE_BT);
-			}
+			
+			mBTAdapter.enable();
+			
+			/*
+			 * Request that Bluetooth be enabled.
+			 * TODO: use this for the Splash Screen activity
+			 */
+//			if (mBTAdapter.isEnabled() == false) {
+//				// Ask to turn on Bluetooth
+//				Intent enableBTIntent = new Intent(
+//						BluetoothAdapter.ACTION_REQUEST_ENABLE);
+//				activity.startActivityForResult(enableBTIntent,
+//						REQUEST_ENABLE_BT);
+//			}
 		}
 		catch (BTException e) {
 			abortWithAlert(e.getMessage(), activity);
 		}
+		
+		// TODO: make initial connection
+		
+		mBTLock.unlock();
 	}
 
 	static public BluetoothTask connect ( )
@@ -253,6 +265,7 @@ public class BluetoothManager
 				.size()];
 
 		// Populates the array with the task objects in the queue
+		// FIXME: Can't make an array of BluetoothTasks from a queue of Runnables
 		sInstance.mBluetoothWorkQueue.toArray(taskArray);
 
 		// Stores the array length so we can iterate over the array
