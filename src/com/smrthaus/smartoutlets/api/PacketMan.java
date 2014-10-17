@@ -69,7 +69,7 @@ public class PacketMan
 			ByteBuffer buffer = ByteBuffer.wrap(element, 1, 2);
 
 			int power = buffer.getShort();
-			Outlet.State state = (data[0] & 0x7F) == data[0] ? State.OFF
+			Outlet.State state = (element[0] & 0x7F) == element[0] ? State.OFF
 					: State.ON;
 
 			outlets.add(new Outlet(oid, "Outlet " + oid.toString(), power,

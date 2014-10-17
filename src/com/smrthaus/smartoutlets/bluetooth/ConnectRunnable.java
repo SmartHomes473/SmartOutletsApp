@@ -99,7 +99,7 @@ public class ConnectRunnable implements Runnable
 			mBluetoothTask.setSocket(socket);
 
 			// Signal other waiting threads that the socket has been created
-			mBluetoothTask.getCondition().signal();
+			mBluetoothTask.getCondition().signalAll();
 			
 			mBluetoothTask.handleState(BT_STATE_CONNECTED);
 		}

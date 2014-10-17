@@ -2,29 +2,26 @@ package com.smrthaus.smartoutlets;
 
 import java.util.ArrayList;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.support.v4.app.ListFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.CompoundButton;
+import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
-import android.widget.ToggleButton;
 
-import com.smrthaus.smartoutlets.Outlet.State;
 import com.smrthaus.smartoutlets.bluetooth.BluetoothManager;
 
 public class ControlFragment extends ListFragment
 {
 	private ArrayList<Outlet>	mOutletsList		= null;
 	private Boolean				mListInitialized	= true;
-	private ControlListAdapter		mAdapter;
+	private ControlListAdapter	mAdapter;
 	private Runnable			viewOutlets;
 	private ProgressBar			mActivityIndicator;
 
@@ -55,8 +52,8 @@ public class ControlFragment extends ListFragment
 		// Create and register the adapter for the ListView
 		Vibrator sVibrator = (Vibrator) getActivity().getSystemService(
 				android.content.Context.VIBRATOR_SERVICE);
-		mAdapter = new ControlListAdapter(getActivity(), R.layout.outlets_list_item,
-				mOutletsList, sVibrator);
+		mAdapter = new ControlListAdapter(getActivity(),
+				R.layout.outlets_list_item, mOutletsList, sVibrator);
 		setListAdapter(mAdapter);
 
 		return view;
@@ -94,5 +91,36 @@ public class ControlFragment extends ListFragment
 
 		Log.i("FRAGMENT_CREATE", "onCreate() called");
 
+		// Display menu options
+		setHasOptionsMenu(true);
+	}
+
+	@Override
+	public void onCreateOptionsMenu ( Menu menu, MenuInflater inflater )
+	{
+		inflater.inflate(R.menu.outlet_control, menu);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected ( MenuItem item )
+	{
+		// handle item selection
+		switch (item.getItemId()) {
+		case R.id.refresh_outlets:
+			// Clear the outlet list
+			mAdapter.clear();
+
+			// Displays the loading animation
+			ViewGroup parent = (ViewGroup) getListView().getParent();
+			parent.findViewById(R.id.outlets_list_progress).setVisibility(
+					View.VISIBLE);
+
+			// Queues a Bluetooth task to fetch outlets
+			BluetoothManager.loadOutlets(getListView());
+
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
 	}
 }
