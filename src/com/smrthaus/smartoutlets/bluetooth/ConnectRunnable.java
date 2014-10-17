@@ -74,7 +74,7 @@ public class ConnectRunnable implements Runnable
 			if (Thread.interrupted()) {
 				throw new InterruptedException();
 			}
-
+			
 			// Gets Bluetooth adapter
 			BluetoothAdapter adapter = mBluetoothTask.getAdapter();
 

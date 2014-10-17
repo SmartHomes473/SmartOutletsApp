@@ -35,12 +35,13 @@ public class BluetoothTask
 
 	// Input buffer for reading Bluetooth responses
 	byte[]							mInputBuffer;
+	final static int				READ_BUFFER_SIZE	= 1024;
 
 	// The Thread on which the task is currently running
 	private Thread					mCurrentThread;
 
 	// A reference to a list of Outlets
-	private ArrayList<Outlet>		mOutletList	= null;
+	private ArrayList<Outlet>		mOutletList			= null;
 
 	// An object that contains the ThreadPool singleton
 	private static BluetoothManager	sBluetoothManager;
@@ -54,6 +55,8 @@ public class BluetoothTask
 		mUpdateOutletRunnable = new UpateOutletRunnable(this);
 
 		sBluetoothManager = BluetoothManager.getInstance();
+		
+		mInputBuffer = new byte[READ_BUFFER_SIZE];
 	}
 
 	void initializeConnectTask ( BluetoothManager bluetoothManager )
@@ -79,7 +82,7 @@ public class BluetoothTask
 			Outlet outlet )
 	{
 		sBluetoothManager = bluetoothManager;
-		
+
 		// Instantiates a weak reference to the Outlet we'll be updating
 		mUpdatedOutletWeakRef = new WeakReference<Outlet>(outlet);
 	}
@@ -189,7 +192,6 @@ public class BluetoothTask
 	{
 		return null != mOutletsListWeakRef ? mOutletsListWeakRef.get() : null;
 	}
-	
 
 	public void setOutletList ( ArrayList<Outlet> outletList )
 	{
@@ -200,9 +202,10 @@ public class BluetoothTask
 	{
 		return mOutletList;
 	}
-	
+
 	public Outlet getUpdatedOutlet ( )
 	{
-		return null != mUpdatedOutletWeakRef ? mUpdatedOutletWeakRef.get() : null;
+		return null != mUpdatedOutletWeakRef ? mUpdatedOutletWeakRef.get()
+				: null;
 	}
 }

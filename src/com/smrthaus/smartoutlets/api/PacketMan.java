@@ -68,7 +68,7 @@ public class PacketMan
 			ByteBuffer buffer = ByteBuffer.wrap(element, 1, 2);
 
 			String id = oid.toString();
-			int power = buffer.getInt();
+			int power = buffer.getShort();
 			Outlet.State state = (data[0] & 0x8F) == data[0] ? State.OFF
 					: State.ON;
 
