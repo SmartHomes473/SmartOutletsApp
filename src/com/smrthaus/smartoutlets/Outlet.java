@@ -8,7 +8,7 @@ import android.os.Parcelable;
 public class Outlet implements Parcelable
 {
 
-	private String	mOutletId;
+	private byte	mOutletId;
 	private String	mOutletName;
 	private State	mOutletState;
 	private int		mCurrentOutletPower;
@@ -28,7 +28,7 @@ public class Outlet implements Parcelable
 	 * @param state
 	 *            Power state of the outlet. Either State.ON or State.OFF.
 	 */
-	public Outlet ( String id, String name, int power, State state )
+	public Outlet ( byte id, String name, int power, State state )
 	{
 		// initialize state
 		mOutletId = id;
@@ -47,12 +47,12 @@ public class Outlet implements Parcelable
 	 * @param name
 	 *            Name describing the outlet.
 	 */
-	public Outlet ( String id, String name, int power )
+	public Outlet ( byte id, String name, int power )
 	{
 		this(id, name, power, State.OFF);
 	}
 
-	public String getId ( )
+	public byte getId ( )
 	{
 		return mOutletId;
 	}
@@ -107,7 +107,7 @@ public class Outlet implements Parcelable
 	 */
 	public void writeToParcel ( Parcel out, int flags )
 	{
-		out.writeString(mOutletId);
+		out.writeByte(mOutletId);
 		out.writeString(mOutletName);
 		out.writeSerializable(mOutletState);
 	}
@@ -135,7 +135,7 @@ public class Outlet implements Parcelable
 	 */
 	private Outlet ( Parcel in )
 	{
-		mOutletId = in.readString();
+		mOutletId = in.readByte();
 		mOutletName = in.readString();
 		mOutletState = (State) in.readSerializable();
 	}
@@ -147,5 +147,10 @@ public class Outlet implements Parcelable
 	public int describeContents ( )
 	{
 		return 0;
+	}
+
+	public boolean isPowered ( )
+	{
+		return mOutletState == State.ON;
 	}
 }

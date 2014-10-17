@@ -1,13 +1,16 @@
 package com.smrthaus.smartoutlets.bluetooth;
 
-import java.util.ArrayList;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.UUID;
+import java.util.concurrent.locks.Lock;
 
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
+import android.bluetooth.BluetoothSocket;
 
 import com.smrthaus.smartoutlets.Outlet;
-import com.smrthaus.smartoutlets.Outlet.State;
+import com.smrthaus.smartoutlets.api.Packet.PacketException;
+import com.smrthaus.smartoutlets.api.PacketMan;
 
 public class UpateOutletRunnable implements Runnable
 {
@@ -47,6 +50,20 @@ public class UpateOutletRunnable implements Runnable
 	@Override
 	public void run ( )
 	{
+		/*
+		 * Stores the current Thread in the BluetoothTask instance so that the
+		 * instance can interrupt the Thread.
+		 */
+		mBluetoothTask.setConnectThread(Thread.currentThread());
+
+		// Moves the current Thread into the background
+		android.os.Process
+				.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
+
+		
+		// Gets the input byte buffer from the BluetoothTask instance.
+		byte[] byteBuffer = mBluetoothTask.getByteBuffer();
+		
 		Outlet outlet = mBluetoothTask.getUpdatedOutlet();
 
 		// Does nothing if the outlet no longer exists
@@ -54,6 +71,46 @@ public class UpateOutletRunnable implements Runnable
 			return;
 		}
 		
+		Lock lock = mBluetoothTask.getLock();
+		lock.lock();
+		
+		try {
+			BluetoothSocket socket = mBluetoothTask.getSocket();
+			
+			while (socket == null) {
+				mBluetoothTask.getCondition().await();
+				socket = mBluetoothTask.getSocket();
+			}
+			
+			OutputStream output = socket.getOutputStream();
+			output.write(PacketMan.packageOutletUpdate(outlet));
+			output.flush();
+			
+			InputStream input = socket.getInputStream();
+			int readLen = input.read(byteBuffer);
+			if (readLen < 0) {
+				throw new IOException();
+			}
+			byte[] packet = new byte[readLen];
+			System.arraycopy(byteBuffer, 0, packet, 0, readLen);
+			
+			if (!PacketMan.parseAck(packet)) {
+				// handle no ack error
+			}
+		}
+		catch (InterruptedException e) {
+			
+		}
+		catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		catch (PacketException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		lock.unlock();
 		// TODO: actually send the update command
 		int status = BT_STATE_UPDATED_OUTLET;
 		

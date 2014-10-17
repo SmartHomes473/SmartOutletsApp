@@ -27,7 +27,7 @@ public class Packet
 	public final static int		HEADER_SIZE				= 3;
 
 	public enum PacketType {
-		ACK, RESP_OUTLETS, RESP_POWER_STATS, RESP_SCHEDULE, REQ_POWER_STATS
+		ACK, RESP_OUTLETS, RESP_POWER_STATS, RESP_SCHEDULE, REQ_POWER_STATS, SET_POWER_STATE
 	}
 
 	// Packet fields
@@ -63,6 +63,10 @@ public class Packet
 
 		case (byte) 0x83:
 			pType = PacketType.RESP_SCHEDULE;
+			break;
+			
+		case (byte) 0x03:
+			pType = PacketType.SET_POWER_STATE;
 			break;
 
 		default:
@@ -140,6 +144,10 @@ public class Packet
 
 		case REQ_POWER_STATS:
 			header[1] = (byte) 0x01;
+			break;
+			
+		case SET_POWER_STATE:
+			header[1] = (byte) 0x03;
 			break;
 
 		default:

@@ -107,7 +107,7 @@ public class LoadOutletsRunnable implements Runnable
 			byte[] packet = new byte[readLen];
 			System.arraycopy(byteBuffer, 0, packet, 0, readLen);
 			
-			outletList = PacketMan.parseOutletUpdate(byteBuffer);
+			outletList = PacketMan.parseOutletUpdate(packet);
 		}
 		catch (InterruptedException e) {
 			// TODO Auto-generated catch block
