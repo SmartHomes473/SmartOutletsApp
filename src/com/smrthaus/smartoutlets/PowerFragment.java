@@ -7,6 +7,9 @@ import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -22,7 +25,7 @@ public class PowerFragment extends ListFragment
 {
 	private ArrayList<Outlet>	mOutletsList		= null;
 	private Boolean				mListInitialized	= true;
-	private OutletPowerAdapter		mAdapter;
+	private PowerListAdapter	mAdapter;
 	private Runnable			viewOutlets;
 	private ProgressBar			mActivityIndicator;
 
@@ -51,8 +54,8 @@ public class PowerFragment extends ListFragment
 		view = inflater.inflate(R.layout.fragment_outlets, container, false);
 
 		// Create and register the adapter for the ListView
-		mAdapter = new OutletPowerAdapter(getActivity(), R.layout.outlets_list_item,
-				mOutletsList);
+		mAdapter = new PowerListAdapter(getActivity(),
+				R.layout.power_list_item, mOutletsList);
 		setListAdapter(mAdapter);
 
 		return view;
@@ -89,69 +92,37 @@ public class PowerFragment extends ListFragment
 		super.onCreate(savedInstanceState);
 
 		Log.i("FRAGMENT_CREATE", "onCreate() called");
+		
+		// Display menu options
+		setHasOptionsMenu(true);
 	}
 
-	/**
-	 * Adapter for populating a ListView with a list of Outlets.
-	 * 
-	 * @author nick
-	 */
-	public class OutletPowerAdapter extends ArrayAdapter<Outlet>
+	@Override
+	public void onCreateOptionsMenu ( Menu menu, MenuInflater inflater )
 	{
-		private ArrayList<Outlet>	items;
+		inflater.inflate(R.menu.outlet_power, menu);
+	}
 
-		public OutletPowerAdapter ( Context context, int textViewResourceId,
-				ArrayList<Outlet> items )
-		{
-			super(context, textViewResourceId, items);
-			this.items = items;
-		}
+	@Override
+	public boolean onOptionsItemSelected ( MenuItem item )
+	{
+		// handle item selection
+		switch (item.getItemId()) {
+		case R.id.refresh_outlets:
+			// Clear the outlet list
+			mAdapter.clear();
 
-		@Override
-		public View getView ( int position, View convertView, ViewGroup parent )
-		{
-			View view = convertView;
+			// Displays the loading animation
+			ViewGroup parent = (ViewGroup) getListView().getParent();
+			parent.findViewById(R.id.outlets_list_progress).setVisibility(
+					View.VISIBLE);
 
-			// inflate the view if not defined
-			if (view == null) {
-				LayoutInflater vi = (LayoutInflater) getContext()
-						.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-				view = vi.inflate(R.layout.outlets_list_item, null);
-			}
+			// Queues a Bluetooth task to fetch outlets
+			BluetoothManager.loadOutlets(getListView());
 
-			// set view elements based on Outlet properties
-			Outlet outlet = items.get(position);
-			if (outlet != null) {
-				TextView label = (TextView) view.findViewById(R.id.outlet_name);
-				ToggleButton toggle = (ToggleButton) view.findViewById(R.id.togglebutton);
-
-				// set the Outlet's label
-				if (label != null) {
-					label.setText(outlet.getName());
-				}
-
-				// set the toggle button state
-				if (toggle != null) {
-					toggle.setTag(R.id.togglebutton_outlet, outlet);
-					
-					toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-						public void onCheckedChanged (
-								CompoundButton buttonView, boolean isChecked )
-						{
-							Outlet outlet = (Outlet) buttonView
-									.getTag(R.id.togglebutton_outlet);
-
-							outlet.setState(isChecked ? State.ON : State.OFF);
-						}
-					});
-					
-					toggle.setChecked(outlet.getState() == Outlet.State.ON ? true
-							: false);
-				}
-
-			}
-
-			return view;
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
 		}
 	}
 }

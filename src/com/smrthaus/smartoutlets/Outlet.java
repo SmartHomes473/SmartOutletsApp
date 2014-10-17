@@ -102,6 +102,16 @@ public class Outlet implements Parcelable
 		mCurrentOutletPower = power;
 	}
 
+	public boolean isPowered ( )
+	{
+		return mOutletState == State.ON;
+	}
+
+	public String getPowerString ( )
+	{
+		return Integer.toString(mCurrentOutletPower) + " W";
+	}
+	
 	/**
 	 * Serializes the object as a Parcel
 	 */
@@ -147,10 +157,5 @@ public class Outlet implements Parcelable
 	public int describeContents ( )
 	{
 		return 0;
-	}
-
-	public boolean isPowered ( )
-	{
-		return mOutletState == State.ON;
 	}
 }
