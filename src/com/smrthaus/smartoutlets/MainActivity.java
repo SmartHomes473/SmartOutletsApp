@@ -1,5 +1,7 @@
 package com.smrthaus.smartoutlets;
 
+import com.smrthaus.smartoutlets.bluetooth.BluetoothManager;
+
 import android.app.ActionBar;
 import android.app.Activity;
 import android.app.FragmentTransaction;

@@ -1,4 +1,4 @@
-package com.smrthaus.smartoutlets;
+package com.smrthaus.smartoutlets.bluetooth;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -7,6 +7,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
+import com.smrthaus.smartoutlets.Outlet;
+import com.smrthaus.smartoutlets.R;
+import com.smrthaus.smartoutlets.R.id;
 
 import android.app.Activity;
 import android.app.AlertDialog;

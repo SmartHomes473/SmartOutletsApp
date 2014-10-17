@@ -16,6 +16,7 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import com.smrthaus.smartoutlets.Outlet.State;
+import com.smrthaus.smartoutlets.bluetooth.BluetoothManager;
 
 public class PowerFragment extends ListFragment
 {

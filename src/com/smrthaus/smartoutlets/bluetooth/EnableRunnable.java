@@ -1,6 +1,6 @@
-package com.smrthaus.smartoutlets;
+package com.smrthaus.smartoutlets.bluetooth;
 
-public class BTEnableRunnable implements Runnable
+public class EnableRunnable implements Runnable
 {
 	// Sets a log tag for this class
 	@SuppressWarnings("unused")
@@ -23,7 +23,7 @@ public class BTEnableRunnable implements Runnable
 	 * @param bluetoothTask
 	 *            The BluetoothTask
 	 */
-	BTEnableRunnable(BluetoothTask bluetoothTask)
+	EnableRunnable(BluetoothTask bluetoothTask)
 	{
 		mBluetoothTask = bluetoothTask;
 	}

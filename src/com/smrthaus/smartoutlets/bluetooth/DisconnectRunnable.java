@@ -1,20 +1,19 @@
-package com.smrthaus.smartoutlets;
+package com.smrthaus.smartoutlets.bluetooth;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.UUID;
 import java.util.concurrent.locks.Lock;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 
-public class BTConnectRunnable implements Runnable
+public class DisconnectRunnable implements Runnable
 {
 	// Sets a log tag for this class
 	@SuppressWarnings("unused")
-	private static final String	LOG_TAG					= "BTConnectRunnable";
+	private static final String	LOG_TAG					= "BTDisconnectRunnable";
 
 	// Constants for indicating the state of the connection
 	static final int			BT_STATE_UNSUPPORTED	= -1;
@@ -22,9 +21,6 @@ public class BTConnectRunnable implements Runnable
 	static final int			BT_STATE_STARTED		= 0;
 	static final int			BT_STATE_CONNECTED		= 1;
 	static final int			BT_STATE_DISCONNECTED	= 2;
-
-	private static final UUID	SPP_UUID				= UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-	private static final String	ADDRESS					= "E0:06:E6:BE:AB:9B";
 
 	// Defines a field that contains the calling object of type BluetoothTask
 	final BluetoothTask			mBluetoothTask;
@@ -36,7 +32,7 @@ public class BTConnectRunnable implements Runnable
 	 * @param bluetoothTask
 	 *            The BluetoothTask
 	 */
-	BTConnectRunnable(BluetoothTask bluetoothTask)
+	DisconnectRunnable ( BluetoothTask bluetoothTask )
 	{
 		mBluetoothTask = bluetoothTask;
 	}
@@ -45,9 +41,8 @@ public class BTConnectRunnable implements Runnable
 	 * Defines the object's task, which is a set of instruction designed to be
 	 * run on a thread.
 	 */
-	@SuppressWarnings("resource")
 	@Override
-	public void run()
+	public void run ( )
 	{
 		/*
 		 * Stores the current Thread in the BluetoothTask instance so that the
@@ -59,15 +54,12 @@ public class BTConnectRunnable implements Runnable
 		android.os.Process
 				.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
 
-		// Gets the input byte buffer from the BluetoothTask instance.
-		byte[] byteBuffer = mBluetoothTask.getByteBuffer();
-
 		// Acquires a lock on the Bluetooth resources
 		Lock lock = mBluetoothTask.getLock();
 		lock.lock();
 
 		/*
-		 * A try block that connects to a Bluetooth device.
+		 * A try block that disconnects from Bluetooth device.
 		 */
 		try {
 			// Before continuing, make sure the thread hasn't been interrupted.
@@ -75,39 +67,30 @@ public class BTConnectRunnable implements Runnable
 				throw new InterruptedException();
 			}
 
-			// Gets Bluetooth adapter
-			BluetoothAdapter adapter = mBluetoothTask.getAdapter();
+			// Gets the currently open socket
+			BluetoothSocket socket = mBluetoothTask.getSocket();
 
-			// Gets the remote Bluetooth device
-			BluetoothDevice device = adapter.getRemoteDevice(ADDRESS);
+			if (socket != null) {
+				// Remove reference to old socket
+				mBluetoothTask.setSocket(null);
 
-			// Open an RFCOMM socket to remote device
-			BluetoothSocket socket = device
-					.createInsecureRfcommSocketToServiceRecord(SPP_UUID);
+				// Flush the output stream
+				OutputStream output = socket.getOutputStream();
+				if (output != null) {
+					output.flush();
+				}
 
-			// Discovery is resource intensive. Disable it.
-			adapter.cancelDiscovery();
+				// Close the socket
+				socket.close();
+			}
 
-			// Establish connection.
-			socket.connect();
-
-			// Get IO streams
-			OutputStream output = socket.getOutputStream();
-			InputStream input = socket.getInputStream();
-
-			// Update the Bluetooth manager with new socket
-			mBluetoothTask.setSocket(socket);
-
-			// Signal other waiting threads that the socket has been created
-			mBluetoothTask.getCondition().signal();
-			
-			mBluetoothTask.handleState(BT_STATE_CONNECTED);
+			mBluetoothTask.handleState(BT_STATE_DISCONNECTED);
 		}
 		// Catches exceptions thrown in response to the thread being interrupted
 		catch (InterruptedException e) {
-			
+
 			// Does nothing
-			
+
 		}
 		// Catches exceptions thrown in response to IO errors
 		catch (IOException e) {
@@ -118,6 +101,5 @@ public class BTConnectRunnable implements Runnable
 			// Release our lock on the Bluetooth resources
 			lock.unlock();
 		}
-
 	}
 }

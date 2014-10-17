@@ -1,4 +1,4 @@
-package com.smrthaus.smartoutlets;
+package com.smrthaus.smartoutlets.bluetooth;
 
 import java.util.ArrayList;
 import java.util.UUID;
@@ -7,9 +7,10 @@ import java.util.concurrent.locks.Lock;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import com.smrthaus.smartoutlets.Outlet;
 import com.smrthaus.smartoutlets.Outlet.State;
 
-public class BTLoadOutletsRunnable implements Runnable
+public class LoadOutletsRunnable implements Runnable
 {
 	// Sets a log tag for this class
 	@SuppressWarnings("unused")
@@ -36,7 +37,7 @@ public class BTLoadOutletsRunnable implements Runnable
 	 * @param bluetoothTask
 	 *            The BluetoothTask
 	 */
-	BTLoadOutletsRunnable ( BluetoothTask bluetoothTask )
+	LoadOutletsRunnable ( BluetoothTask bluetoothTask )
 	{
 		mBluetoothTask = bluetoothTask;
 	}

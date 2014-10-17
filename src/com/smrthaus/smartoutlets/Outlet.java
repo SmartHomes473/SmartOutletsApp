@@ -1,5 +1,7 @@
 package com.smrthaus.smartoutlets;
 
+import com.smrthaus.smartoutlets.bluetooth.BluetoothManager;
+
 import android.os.Parcel;
 import android.os.Parcelable;
 

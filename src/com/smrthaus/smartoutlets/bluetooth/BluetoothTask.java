@@ -1,9 +1,11 @@
-package com.smrthaus.smartoutlets;
+package com.smrthaus.smartoutlets.bluetooth;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
+
+import com.smrthaus.smartoutlets.Outlet;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothSocket;
@@ -46,10 +48,10 @@ public class BluetoothTask
 	// Create a class containing a connect object
 	BluetoothTask ( )
 	{
-		mConnectRunnable = new BTConnectRunnable(this);
-		mDisconnectRunnable = new BTDisconnectRunnable(this);
-		mLoadOutletsRunnable = new BTLoadOutletsRunnable(this);
-		mUpdateOutletRunnable = new BTUpateOutletRunnable(this);
+		mConnectRunnable = new ConnectRunnable(this);
+		mDisconnectRunnable = new DisconnectRunnable(this);
+		mLoadOutletsRunnable = new LoadOutletsRunnable(this);
+		mUpdateOutletRunnable = new UpateOutletRunnable(this);
 
 		sBluetoothManager = BluetoothManager.getInstance();
 	}
