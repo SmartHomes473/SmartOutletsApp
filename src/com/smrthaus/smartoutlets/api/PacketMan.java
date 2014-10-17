@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import com.smrthaus.smartoutlets.Outlet;
 import com.smrthaus.smartoutlets.Outlet.State;
 import com.smrthaus.smartoutlets.api.Packet.PacketException;
+import com.smrthaus.smartoutlets.api.Packet.PacketType;
 
 public class PacketMan
 {
@@ -75,6 +76,18 @@ public class PacketMan
 		}
 
 		return outlets;
+	}
+	
+	static public byte[] packageOutletRequest ( )
+	{
+		byte[] header = Packet.getHeader(PacketType.REQ_POWER_STATS);
+		byte[] data = { 0x0 };
+		
+		byte [] request = new byte[header.length + data.length];
+		System.arraycopy(header, 0, request, 0, header.length);
+		System.arraycopy(data, 0, request, header.length, data.length);
+		
+		return request;
 	}
 	
 	public static PacketMan getInstance ( )

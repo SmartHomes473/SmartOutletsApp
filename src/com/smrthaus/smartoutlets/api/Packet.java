@@ -1,5 +1,8 @@
 package com.smrthaus.smartoutlets.api;
 
+import java.util.Random;
+
+
 public class Packet
 {
 	/*
@@ -21,9 +24,10 @@ public class Packet
 	// Packet parameters
 	public final static int		MIN_PACKET_SIZE			= 3;
 	public final static byte	SMART_OUTLETS_DEVICE_ID	= 0x03;
+	public final static int		HEADER_SIZE				= 3;
 
-	private enum PacketType {
-		ACK, RESP_OUTLETS, RESP_POWER_STATS, RESP_SCHEDULE
+	public enum PacketType {
+		ACK, RESP_OUTLETS, RESP_POWER_STATS, RESP_SCHEDULE, REQ_POWER_STATS
 	}
 
 	// Packet fields
@@ -106,5 +110,48 @@ public class Packet
 	public static class PacketException extends Exception
 	{
 
+	}
+
+	public static byte[] getHeader ( PacketType type )
+	{
+		byte[] header = new byte[HEADER_SIZE];
+
+		// Sets the device ID to smart outlets
+		header[0] = 0x03;
+
+		// Gets the packet request type
+		// FIXME: convert this into a dictionary-style lookup
+		switch (type) {
+		case ACK:
+			header[1] = (byte) 0x80;
+			break;
+
+		case RESP_OUTLETS:
+			header[1] = (byte) 0x81;
+			break;
+
+		case RESP_POWER_STATS:
+			header[1] = (byte) 0x82;
+			break;
+
+		case RESP_SCHEDULE:
+			header[1] = (byte) 0x83;
+			break;
+
+		case REQ_POWER_STATS:
+			header[1] = (byte) 0x01;
+			break;
+
+		default:
+			header[1] = (byte) 0xFF;
+			break;
+		}
+		
+		// Generates a random message ID
+		byte[] mid = new byte[1];
+		(new Random()).nextBytes(mid);
+		header[2] = mid[0];
+		
+		return header;
 	}
 }
